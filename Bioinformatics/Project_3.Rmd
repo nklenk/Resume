@@ -1,0 +1,352 @@
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=4, fig.width=6)
+library(ggplot2)
+theme_set(theme_bw(base_size=12))
+library(dplyr)
+library(tidyr)
+library(mice)
+```
+---
+title: "Project 3_nlk322"
+author: "Neil Klenk"
+date: "May 1, 2016"
+output: html_document
+---
+##Project 3
+
+#Introduction
+
+For this project I will be using the World Development Indicators dataset located at <https://www.kaggle.com/worldbank/world-development-indicators>. This dataset contains over a thousand annual indicators of economic development from hundreds of countries around the world, supplied by the world bank. This is a tidy dataset with each row containg an observation. 
+
+```{r}
+ Indicators <- read.csv("~/Spring 2016/Bioinformatics/Projects/Project 3/world-development-indicators-release-2016-01-28-06-31-53/world-development-indicators/Indicators.csv")
+
+```
+
+#Question 1:
+
+How are the GDP growth trends from 2004 to 2014 different for developing countries worldwide?"
+
+```{r}
+#sepparating larger Indicators dataset into 5 smaller sets, each contining a CountryCode of interest, and only the relevant GDP infomration.
+EAP_GDP <- Indicators %>% filter(CountryCode == "EAP") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") 
+
+ECA_GDP <- Indicators %>% filter(CountryCode == "ECA") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") 
+
+LAC_GDP <- Indicators %>% filter(CountryCode == "LAC") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") 
+
+MNA_GDP <- Indicators %>% filter(CountryCode == "MNA") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") 
+
+SSA_GDP <- Indicators %>% filter(CountryCode == "SSA") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") 
+
+#Combining all of the GDP information into a single dataframe
+My_GDP <- union(EAP_GDP, ECA_GDP)
+My_GDP <- union(My_GDP, LAC_GDP)
+My_GDP <- union(My_GDP, MNA_GDP)
+My_GDP <- union(My_GDP, SSA_GDP)
+
+#Filtering for timespan of interest
+My_GDP_I <- My_GDP %>% filter(2003 < Year, Year < 2015)
+
+#Plotting The yearly change in GDP by country
+GDP_Plot <- My_GDP_I %>% ggplot(aes(x = Year, y = Value, group = CountryCode, color = CountryName)) + geom_point() + geom_smooth(se = FALSE, size = 3) + ggtitle("Yearly GDP change in Developing Countries")
+
+GDP_Plot
+
+```
+
+  This question required the comparison of GDP growth over time from multiple different groups. A scatterplot with lines of best fit was choosen because it would give the reader a good sense of both the volatility of this measure, while giving them a way to easily visualize overall trends of the dfferent groups. The overall "Indicators" dataset was filtered by country code and to only include the information about the GDP change each year. All of the resulting datasets were then joined using union() to create a new single dataset with all if the neede information. Value was then plotted against the year in a scatterplot with geom_smooth() providing a smoothed conditional mean (loess method).  Each developing region recieved its own color for easy differentiation.
+
+  By directly comparing the change in GDP over time, it is easy to see any deviation between the regions. The smoothed conditional mean gives a better look at the overall trend of the GDP, which is especially volatile in developing regions. The loess method was appropriate to use because it deterines the value at point x from the points neghiboring it, weighted by their distance, curbing some of the volatility.
+
+  The East Asia & Pacific region is the most dramatically different, staying very positive over the plotted timeframe. The rest of the regions approach 0 change in GDP around 2009, and again in 2014. Of those that approached 0, the Middle East and North African region was the only to not experience a period of growth prior to falling back to 0. 
+
+  From 2004 to 2014, Developing regions around the world Experienced varied changes in their GDP. While regions like Europe and Central Asia had GDP growth patterns nearly idential to Latin America and Carribean, East Asia and Pacific region can be seen to have much better GDP growth than any of the other regions. The Middle East and North Africa region followed the overall downward trend of the others, but missed the upward swing the others got starting in 2009. 
+
+#Question 2:
+
+  Should the developing countries be focusing on Taxes on International Trade, Interest Payments, Business Extent of Disclosure Index, and New Business Density to help increase GDP growth?
+
+```{r}
+##########East Asia & Pacific Region###########
+#Filtering out unecessary info, sepparating data set into different Indicator codes, and rearranging resulting table
+EAP_GDP_reg_0 <- Indicators %>% filter(CountryCode == "EAP") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+EAP_GDP_reg_1 <- Indicators %>% filter(CountryCode == "EAP") %>% filter(IndicatorCode == "GC.TAX.INTT.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+EAP_GDP_reg_2 <- Indicators %>% filter(CountryCode == "EAP") %>% filter(IndicatorCode == "GC.XPN.INTP.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+EAP_GDP_reg_3 <- Indicators %>% filter(CountryCode == "EAP") %>% filter(IndicatorCode == "IC.BUS.DISC.XQ") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+EAP_GDP_reg_4 <- Indicators %>% filter(CountryCode == "EAP") %>% filter(IndicatorCode == "IC.BUS.NDNS.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+
+#Combining all the resulting data sets into a larger one for the linear regression
+EAP_GDP_reg <- full_join(EAP_GDP_reg_0, EAP_GDP_reg_1)
+EAP_GDP_reg <- full_join(EAP_GDP_reg, EAP_GDP_reg_2)
+EAP_GDP_reg <- full_join(EAP_GDP_reg, EAP_GDP_reg_3)
+EAP_GDP_reg <- full_join(EAP_GDP_reg, EAP_GDP_reg_4)
+
+#imputing the missing data
+EAP_Imp_temp <- EAP_GDP_reg %>% mice(m=5, method = "pmm")
+
+#Performing Linear Regression
+EAP_glm.out <- with(EAP_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(EAP_glm.out))
+
+#removing worst predictor
+EAP_glm.out <- with(EAP_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(EAP_glm.out))
+
+#removing worst predictor
+EAP_glm.out <- with(EAP_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + IC.BUS.DISC.XQ))
+
+summary(pool(EAP_glm.out))
+
+#removing worst predictor
+EAP_glm.out <- with(EAP_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ IC.BUS.DISC.XQ ))
+
+summary(pool(EAP_glm.out))
+
+#Creating a dataset that includes the imputed values
+EAP_Imp <- complete(EAP_Imp_temp, 1)
+
+#Rearranging the table
+EAP_GDP_regfix <- EAP_Imp %>% gather("IndicatorCode", "Value", 4:8) 
+
+#Setting Margins
+par(mar=c(6,6,5,3))
+
+
+#Plotting the variables and the overall GDP curve
+ggplot(EAP_GDP_regfix %>% filter(IndicatorCode != "NY.GDP.PCAP.KD.ZG"), aes(x = Year, y = Value, group = IndicatorCode, color = IndicatorCode)) + geom_smooth(se = FALSE, size = 1) + ggtitle("Potential indicators for EAP Region")
+
+EAP_GDP_Plot <- My_GDP_I %>% filter(CountryCode == "EAP") %>% ggplot(aes(x = Year, y = Value, group = CountryCode)) + geom_smooth(se = FALSE, size = 3) + ggtitle("Yearly GDP change in EAP Regions")
+
+EAP_GDP_Plot
+
+
+##########Europe and Central Asia Region##########
+#Filtering out unecessary info, sepparating data set into different Indicator codes, and rearranging resulting table
+ECA_GDP_reg_0 <- Indicators %>% filter(CountryCode == "ECA") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+ECA_GDP_reg_1 <- Indicators %>% filter(CountryCode == "ECA") %>% filter(IndicatorCode == "GC.TAX.INTT.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+ECA_GDP_reg_2 <- Indicators %>% filter(CountryCode == "ECA") %>% filter(IndicatorCode == "GC.XPN.INTP.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+ECA_GDP_reg_3 <- Indicators %>% filter(CountryCode == "ECA") %>% filter(IndicatorCode == "IC.BUS.DISC.XQ") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+ECA_GDP_reg_4 <- Indicators %>% filter(CountryCode == "ECA") %>% filter(IndicatorCode == "IC.BUS.NDNS.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+
+#Combining all the resulting data sets into a larger one for the linear regression
+ECA_GDP_reg <- full_join(ECA_GDP_reg_0, ECA_GDP_reg_1)
+ECA_GDP_reg <- full_join(ECA_GDP_reg, ECA_GDP_reg_2)
+ECA_GDP_reg <- full_join(ECA_GDP_reg, ECA_GDP_reg_3)
+ECA_GDP_reg <- full_join(ECA_GDP_reg, ECA_GDP_reg_4)
+
+#imputing the missing data
+ECA_Imp_temp <- ECA_GDP_reg %>% mice(m=5, method = "pmm")
+
+#performing the linear regression
+ECA_glm.out <- with(ECA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(ECA_glm.out))
+
+#removing the worst predictor
+ECA_glm.out <- with(ECA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ))
+
+summary(pool(ECA_glm.out))
+
+#removing the worst predictor
+ECA_glm.out <- with(ECA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ))
+
+summary(pool(ECA_glm.out))
+
+#removing the worst predictor
+ECA_glm.out <- with(ECA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ IC.BUS.DISC.XQ))
+
+summary(pool(ECA_glm.out))
+
+#Creating a dataset that includes the imputed values
+ECA_Imp <- complete(ECA_Imp_temp, 1)
+
+#Rearranging the table
+ECA_GDP_regfix <- ECA_Imp %>% gather("IndicatorCode", "Value", 4:8)
+
+#Plotting the variables and the overall GDP curve
+ggplot(ECA_GDP_regfix %>% filter(IndicatorCode != "NY.GDP.PCAP.KD.ZG"), aes(x = Year, y = Value, group = IndicatorCode, color = IndicatorCode)) + geom_smooth(se = FALSE, size = 1) + ggtitle("Potential indicators for ECA Region")
+
+ECA_GDP_Plot <- My_GDP_I %>% filter(CountryCode == "ECA") %>% ggplot(aes(x = Year, y = Value, group = CountryCode)) + geom_smooth(se = FALSE, size = 3) + ggtitle("Yearly GDP change in ECA Region")
+
+ECA_GDP_Plot
+
+
+
+##########Latin America and Carribean Region##########
+#Filtering out unecessary info, sepparating data set into different Indicator codes, and rearranging resulting table
+LAC_GDP_reg_0 <- Indicators %>% filter(CountryCode == "LAC") %>% filter(IndicatorCode  == "NY.GDP.PCAP.KD.ZG") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+LAC_GDP_reg_1 <- Indicators %>% filter(CountryCode == "LAC") %>% filter(IndicatorCode  == "GC.TAX.INTT.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+LAC_GDP_reg_2 <- Indicators %>% filter(CountryCode == "LAC") %>% filter(IndicatorCode  == "GC.XPN.INTP.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+LAC_GDP_reg_3 <- Indicators %>% filter(CountryCode == "LAC") %>% filter(IndicatorCode  == "IC.BUS.DISC.XQ") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+LAC_GDP_reg_4 <- Indicators %>% filter(CountryCode == "LAC") %>% filter(IndicatorCode  == "IC.BUS.NDNS.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+
+#Combining all the resulting data sets into a larger one for the linear regression
+LAC_GDP_reg <- full_join(LAC_GDP_reg_0, LAC_GDP_reg_1)
+LAC_GDP_reg <- full_join(LAC_GDP_reg, LAC_GDP_reg_2)
+LAC_GDP_reg <- full_join(LAC_GDP_reg, LAC_GDP_reg_3)
+LAC_GDP_reg <- full_join(LAC_GDP_reg, LAC_GDP_reg_4)
+
+#imputing the missing data
+LAC_Imp_temp <- LAC_GDP_reg %>% mice(m=5, method = "pmm")
+
+#performing the linear regression
+LAC_glm.out <- with(LAC_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(LAC_glm.out))
+
+#removing the worst predictor
+LAC_glm.out <- with(LAC_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ))
+
+summary(pool(LAC_glm.out))
+
+#removing the worst predictor
+LAC_glm.out <- with(LAC_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS))
+
+summary(pool(LAC_glm.out))
+
+#removing the worst predictor
+LAC_glm.out <- with(LAC_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.XPN.INTP.RV.ZS))
+
+summary(pool(LAC_glm.out))
+
+#Creating a dataset that includes the imputed values
+LAC_Imp <- complete(LAC_Imp_temp, 1)
+
+#Rearranging the table
+LAC_GDP_regfix <- LAC_Imp %>% gather("IndicatorCode", "Value", 4:8)
+
+#Plotting the variables and the overall GDP curve
+ggplot(LAC_GDP_regfix %>% filter(IndicatorCode != "NY.GDP.PCAP.KD.ZG"), aes(x = Year, y = Value, group = IndicatorCode, color = IndicatorCode)) + geom_smooth(se = FALSE, size = 1) + ggtitle("Potential indicators for LAC Region")
+
+LAC_GDP_Plot <- My_GDP_I %>% filter(CountryCode == "LAC") %>% ggplot(aes(x = Year, y = Value, group = CountryCode)) + geom_smooth(se = FALSE, size = 3) + ggtitle("Yearly GDP change in LAC Region")
+
+LAC_GDP_Plot
+
+
+
+##########Middle East and North Africa Region##########
+#Filtering out unecessary info, sepparating data set into different Indicator codes, and rearranging resulting table
+MNA_GDP_reg_0 <- Indicators %>% filter(CountryCode == "MNA") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") %>% filter(2003 < Year, Year < 2015) %>%  group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+MNA_GDP_reg_1 <- Indicators %>% filter(CountryCode == "MNA") %>% filter(IndicatorCode == "GC.TAX.INTT.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+MNA_GDP_reg_2 <- Indicators %>% filter(CountryCode == "MNA") %>% filter(IndicatorCode == "GC.XPN.INTP.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+MNA_GDP_reg_3 <- Indicators %>% filter(CountryCode == "MNA") %>% filter(IndicatorCode == "IC.BUS.DISC.XQ") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+MNA_GDP_reg_4 <- Indicators %>% filter(CountryCode == "MNA") %>% filter(IndicatorCode == "IC.BUS.NDNS.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+
+#Combining all the resulting data sets into a larger one for the linear regression
+MNA_GDP_reg <- full_join(MNA_GDP_reg_0, MNA_GDP_reg_1)
+MNA_GDP_reg <- full_join(MNA_GDP_reg, MNA_GDP_reg_2)
+MNA_GDP_reg <- full_join(MNA_GDP_reg, MNA_GDP_reg_3)
+MNA_GDP_reg <- full_join(MNA_GDP_reg, MNA_GDP_reg_4)
+
+#imputing the missing data
+MNA_Imp_temp <- MNA_GDP_reg %>% mice(m=5, method = "pmm")
+
+#performing the linear regression
+MNA_glm.out <- with(MNA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(MNA_glm.out))
+
+#removing worst predictor
+MNA_glm.out <- with(MNA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(MNA_glm.out))
+
+#removing worst predictor
+MNA_glm.out <- with(MNA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + IC.BUS.NDNS.ZS))
+
+summary(pool(MNA_glm.out))
+
+#removing worst predictor
+MNA_glm.out <- with(MNA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + IC.BUS.NDNS.ZS))
+
+summary(pool(MNA_glm.out))
+
+#removing worst predictor
+MNA_glm.out <- with(MNA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS))
+
+summary(pool(MNA_glm.out))
+
+#Creating a dataset that includes the imputed values
+MNA_Imp <- complete(MNA_Imp_temp, 1)
+
+#Rearranging the table
+MNA_GDP_regfix <- MNA_Imp %>% gather("IndicatorCode", "Value", 4:8)
+
+#Plotting the variables and the overall GDP curve
+ggplot(MNA_GDP_regfix %>% filter(IndicatorCode != "NY.GDP.PCAP.KD.ZG"), aes(x = Year, y = Value, group = IndicatorCode, color = IndicatorCode)) + geom_smooth(se = FALSE, size = 1) + ggtitle("Potential indicators for MNA Region")
+
+MNA_GDP_Plot <- My_GDP_I %>% filter(CountryCode == "MNA") %>% ggplot(aes(x = Year, y = Value, group = CountryCode)) + geom_smooth(se = FALSE, size = 3) + ggtitle("Yearly GDP change in MNA Region")
+
+MNA_GDP_Plot
+
+
+
+##########Sub-Saharan Africa Region##########
+#Filtering out unecessary info, sepparating data set into different Indicator codes, and rearranging resulting table
+SSA_GDP_reg_0 <- Indicators %>% filter(CountryCode == "SSA") %>% filter(IndicatorCode == "NY.GDP.PCAP.KD.ZG") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+SSA_GDP_reg_1 <- Indicators %>% filter(CountryCode == "SSA") %>% filter(IndicatorCode == "GC.TAX.INTT.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+SSA_GDP_reg_2 <- Indicators %>% filter(CountryCode == "SSA") %>% filter(IndicatorCode == "GC.XPN.INTP.RV.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+SSA_GDP_reg_3 <- Indicators %>% filter(CountryCode == "SSA") %>% filter(IndicatorCode == "IC.BUS.DISC.XQ") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+SSA_GDP_reg_4 <- Indicators %>% filter(CountryCode == "SSA") %>% filter(IndicatorCode == "IC.BUS.NDNS.ZS") %>% filter(2003 < Year, Year < 2015) %>% group_by(Year) %>% spread(IndicatorCode, Value) %>% select(-IndicatorName)
+
+#Combining all the resulting data sets into a larger one for the linear regression
+SSA_GDP_reg <- full_join(SSA_GDP_reg_0, SSA_GDP_reg_1)
+SSA_GDP_reg <- full_join(SSA_GDP_reg, SSA_GDP_reg_2)
+SSA_GDP_reg <- full_join(SSA_GDP_reg, SSA_GDP_reg_3)
+SSA_GDP_reg <- full_join(SSA_GDP_reg, SSA_GDP_reg_4)
+
+#imputing the missing data
+SSA_Imp_temp <- SSA_GDP_reg %>% mice(m=5, method = "pmm")
+
+#perfoming the linear regression with filled dataset
+
+SSA_glm.out <- with(SSA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + GC.XPN.INTP.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(SSA_glm.out))
+
+#removing worst predictor
+
+SSA_glm.out <- with(SSA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS + IC.BUS.DISC.XQ + IC.BUS.NDNS.ZS))
+
+summary(pool(SSA_glm.out))
+
+#removing worst predictor
+
+SSA_glm.out <- with(SSA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ GC.TAX.INTT.RV.ZS +  IC.BUS.NDNS.ZS))
+
+summary(pool(SSA_glm.out))
+
+#removing worst predictor
+
+SSA_glm.out <- with(SSA_Imp_temp, lm(NY.GDP.PCAP.KD.ZG ~ IC.BUS.NDNS.ZS))
+
+summary(pool(SSA_glm.out))
+
+#Creating a dataset that includes the imputed values
+SSA_Imp <- complete(SSA_Imp_temp, 1)
+
+#Rearranging the table
+SSA_GDP_regfix <- SSA_Imp %>% gather("IndicatorCode", "Value", 4:8)
+
+#Plotting the variables and the overall GDP curve
+ggplot(SSA_GDP_regfix %>% filter(IndicatorCode != "NY.GDP.PCAP.KD.ZG"), aes(x = Year, y = Value, group = IndicatorCode, color = IndicatorCode)) + geom_smooth(se = FALSE, size = 1) + ggtitle("Potential indicators for SSA Region")
+
+SSA_GDP_Plot <- My_GDP_I %>% filter(CountryCode == "SSA") %>% ggplot(aes(x = Year, y = Value, group = CountryCode)) + geom_smooth(se = FALSE, size = 3) + ggtitle("Yearly GDP change in SSA Region")
+
+SSA_GDP_Plot
+
+```
+  In order to determine if any of the suspect factors were actually predictors of the countries change in GDP for that year, a linear regression was performed. The overall "Indicators" dataset was broken up by CountryCode, and irrelavent information wa removed. The remaining tables were then rejoined, and any resulting N/A values were filled with the MICE package. The regression was performed on the resulting dataset. When it was detemined that none of the chosen variables was predictive, the predictor values as well as the GDP change were plotted to visually show a lack of similarity between the predictor and the nonpredictive curves.'
+  
+  A linear regression is a good way to determine if variable are predictive or not, and further to distinguish which of the variables are predictive. In this case, none of the variables were predictive. Therefore, the plots were made to show how the predictive variables differed from the variable that they were trying to predict. 
+  
+  Comparing the plots of the unpredictive variables and the variable of interest, it can be easily seen that there is no real realtionship between them. This validates the results of the linear regressions.
+  
+  Developing countries do not need to be focusing on taxes on international trade, interest payments, business extent of disclosure index, or new business density to help increase GDP growth.  
+
+
+

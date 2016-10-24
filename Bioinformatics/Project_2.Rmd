@@ -1,0 +1,196 @@
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=4, fig.width=5)
+library(ggplot2)
+theme_set(theme_bw(base_size=12))
+library(dplyr)
+library(tidyr)
+library(grid)
+```
+## Project 2 
+Neil Klenk (nlk322)
+
+###Instructions
+Please submit both this completed Rmarkdown document and its knitted HTML, converted to PDF, on Canvas **no later than 11:59 pm on March 29th, 2015**. These two documents will be graded jointly, so they must be consistent (as in, don't change the Rmarkdown file without also updating the knitted HTML!).
+
+All results presented **must** have corresponding code. Any answers/results given without the corresponding R code that generated the result will be considered absent. All code reported in your final project document should work properly. Please bear in mind that **you will lose points** for the following:
+
++ an R-code chunk with no comments
++ results without corresponding R code
++ extraneous code which does not contribute to the question
+
+For this project, you will work with a dataset collected from Pima Native American women. Studies have shown that Pima women have a much higher incidence of Type II Diabetes than the general population. Since the 1960s, NIH researchers have periodically asked Pima women to undergo various medical tests in order to assess possible diabetes risk factors. Consequently, data on Pima women has proven useful for predicting how likely an individual is to develop diabetes. [Source: J. W. Smith, J. E. Everhart, W. C. Dickson, W. C. Knowler, and R. S. Johannes (1988). Using the ADAP learning algorithm to forecast the onset of diabetes mellitus. In Symposium on Computer Applications in Medical Care, 261–265.]
+Your goal for this project is to analyze the Pima women dataset using several statistical approaches we have learned, in two parts.
+
+We have already subdivided the full data set into training and test data sets (`pima_training` and `pima_test`). And we also provide the full data set (`pima_full`). Please use the training and test data sets for Part 1 and either data set for Part 2. 
+
+
+```{r}
+##### Use these datasets for part 1 (described below) #####
+# Dataset to use specifically for training in Part 1
+pima_training <- read.csv("http://wilkelab.org/classes/SDS348/2016_spring/projects/project2/pima_training.csv")
+# Dataset to use specifically for testing your model in Part 1
+pima_test <- read.csv("http://wilkelab.org/classes/SDS348/2016_spring/projects/project2/pima_test.csv")
+
+##### Use this dataset for part 2 (described below) #####
+# Complete Pima data, with a single observation per individual
+pima_full <- read.csv("http://wilkelab.org/classes/SDS348/2016_spring/projects/project2/pima.csv")
+
+head(pima_full)
+```
+The column contents are as follows:
+
++ **npreg**: number of times pregnant
++ **glucose**: plasma glucose concentration at 2 hours in an oral glucose tolerance test (units: mg/dL)
++ **dpb**: diastolic blood pressure (units: mm Hg)
++ **skin**: triceps skin-fold thickness (units: mm)
++ **insulin**: 2-hour serum insulin level (units: $\mu$U/mL)
++ **bmi**: Body Mass Index
++ **age**: age in years
++ **diabetic**: whether or not the individual has diabetes
+
+**Part 1 (40 points)**. We have divided the dataset, which consists of observations from 768 individuals, into a training and a test data set. Fit a logistic regression model (to predict diabetes incidence) on the training data set. When building your model, use backwards selection to choose predictors which are significant **at your chosen significance level (be sure to report your chosen value!)**. Your code should be appropriately commented with high-level statements about the code's function.
+
+Using your final model, predict the outcome on the test data set, and plot and discuss your results. You should have two final plots: a plot with two ROC curves for the training and test data each, and a plot of the fitted probability of diabetes incidence as a function of the predictors, colored by diabetes, on the test data. Your discussion should, at least, cover the differences and similarities in model performance on the training vs. test data (including AUC) as well as a clear interpretation of each plot. Please limit your discussion to a maximum of 8 sentences.
+
+
+**Part 2 (60 points)**. Think of two **scientific** questions to ask about this data set (for this, you are welcome to use either the training, test, or full data set). Scientific questions should not be procedural, they should be **conceptual**. (For example, "What is the distribution of ages?" is a **procedural** question because all it asks you to do is plot a distribution, but, "Are incidence of diabetes higher in older women or in younger women?" is a **conceptual** question because you have to determine which type of plot is appropriate for the question and interperet that plot.) For each question, perform an exploratory statistical analysis (PCA, k-means, logistic regression, linear model, etc.) with a corresponding figure. Discuss your findings, in particular how your analysis' results reveal (or don't reveal) an answer your proposed question. Please limit each question's discussion to a maximum of 5 sentences.
+
+Project responses should be entered below. model.name=NULL)
+  {
+  outcome <- as.numeric(factor(known_truth))-1
+  pos <- sum(outcome) # total known positives
+  neg <- sum(1-outcome) # total known negatives
+  pos_probs <- outcome*probabilities # probabilities for known positives
+
+***  
+
+```{r}
+# This R code chunk contains the calc_ROC function.
+calc_ROC <- function(probabilities, known_truth, model.name=NULL)
+  {
+  outcome <- as.numeric(factor(known_truth))-1
+  pos <- sum(outcome) # total known positives
+  neg <- sum(1-outcome) # total known negatives
+  pos_probs <- outcome*probabilities # probabilities for known positives
+  neg_probs <- (1-outcome)*probabilities # probabilities for known negatives
+  true_pos <- sapply(probabilities,
+                     function(x) sum(pos_probs>=x)/pos) # true pos. rate
+  false_pos <- sapply(probabilities,
+                     function(x) sum(neg_probs>=x)/neg)
+  if (is.null(model.name))
+    result <- data.frame(true_pos, false_pos)
+  else
+    result <- data.frame(true_pos, false_pos, model.name)
+  result %>% arrange(false_pos, true_pos)
+  }
+```
+
+
+**Part 1**
+```{r}
+#logistic regression using all avaliable predictors
+glm.out.training <- glm(diabetic ~ npreg + glucose + dbp + skin + insulin + bmi + age, data = pima_training, family = binomial)
+summary(glm.out.training)
+
+#logistic regression after the worst performing predictor was removed
+glm.out.training <- glm(diabetic ~ glucose + dbp + skin + insulin + bmi + age, data = pima_training, family = binomial)
+summary(glm.out.training)
+
+#logistic regression where all predictors have a p-value < 0.05
+glm.out.training <- glm(diabetic ~ glucose + dbp + bmi + age, data = pima_training, family = binomial)
+summary(glm.out.training)
+
+#Created a logistic regression model for the data in pima_test using the predictor variables from the model that was created using the training data
+test_pred <- predict(glm.out.training, pima_test, type = 'response')
+
+#Created a ROC model for the pima_test data to see how well the model perfomed
+ROC_test <- calc_ROC(probabilities = test_pred, known_truth = pima_test$diabetic, model.name = "Test Data")
+
+#Created a ROC model for the pima_training data to see how the model performed
+ROC_training <- calc_ROC(probabilities = glm.out.training$fitted.values, known_truth = pima_training$diabetic, model.name = "Training Data")
+
+#Plotting the two ROC curves on the same graph for easy comparative analysis
+ggplot(data = NULL, aes(x = false_pos, y = true_pos)) + geom_line(data = ROC_test, aes(color = model.name)) + geom_line(data = ROC_training, aes(color = model.name))
+
+#combining the two different ROCs 
+ROCs <- rbind(ROC_test, ROC_training)
+
+#determing the area under the curve (AUC) for each of the ROCs
+ROCs %>% group_by(model.name) %>% 
+  mutate(delta=false_pos-lag(false_pos)) %>%
+  summarize(AUC=sum(delta*true_pos, na.rm=T)) %>%
+  arrange(desc(AUC))
+
+#Created a new dataset for use while making the final plot
+glm.out.test <- glm(diabetic ~ glucose + dbp + bmi + age, data = pima_test, family = binomial)
+
+#Created a new data frame consisting of the fitted probability of getting diabetes, as a function of the predictors.
+lr_data <- data.frame(predictor=glm.out.test$linear.predictors, prob=glm.out.test$fitted.values, Diabetes=pima_test$diabetic)
+
+#Plotted the itted probability of getting diabetes, as a function of the predictors.
+ggplot(lr_data, aes(x=predictor, y=prob, color=Diabetes)) + geom_point()
+```
+*Discussion for part 1 goes here.*    
+With a singificance P-value defined as 0.5, glucose, dbp, bmi, and age were all found to be significan predictors of diabetes. 
+
+It can be seen that both models performed much better than a random guess when using the glm that was prepared using the training data. The training data performs better than the test data, and this can be seen through the area under the curve (AUC) values, 0.838 and 0.819 respectively. This was expected as a predictor always works best on the data set on which it was trained. Both of those values are much higher than the value of 0.5 that would be obtained if the model was completly ineffective. 
+
+The logistic regression model is of the fitted probability as a function of the predictors shows a clear sepparation beween those with and without diabetes. This clear seppartaion indicates that the multiple explanatory variables chosen strongly determine if the individual will have daibetes or not. 
+
+
+**Part 2**
+
+The Pima is a very particular group of peolple. Using the provided infomration, make a reasonlable deduction to the degree of genetic homology present. 
+```{r}
+
+#Determining the best number of clusters to use by plotting the within group sum of squares against the number of clusters used.
+pima_full_numeric_test <- pima_full %>% select(-diabetic, -npreg, -skin)
+
+#Calculating the within group sum of squares (wss) for each of potential cluster numbers (2 - 15)
+wss <- (nrow(pima_full_numeric_test)-1)*sum(apply(pima_full_numeric_test,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(pima_full_numeric_test, nstart=10, centers=i)$withinss)
+
+#Creating a new data frame composed of the wss score for each number of potential clusters
+wss_data <- data.frame(centers=1:15, wss)
+
+#Plotting the wss against the number of clusters
+ggplot(wss_data, aes(x=centers, y=wss)) + geom_point() + geom_line() + xlab("Number of Clusters") + ylab("Within Group sum of Squares")
+
+#Stating that there are 5 clusters in this dataset
+pima_full_numeric_test %>% kmeans(centers = 5) -> km
+
+#Creating a dataframe consisting of the pima_full data set with the custer column added on
+pima_clustered <- data.frame(pima_full, cluster = factor(km$cluster))
+
+#Performing a PCA analysis to make the data more interpretable
+pca <- pima_full_numeric_test %>% scale() %>% prcomp()
+
+#Creating a new dataframe with teh results from the PCA analysis, the clusters, and if the subject was diabetic or not
+cluster_data <- data.frame(pca$x, cluster = factor(km$cluster), diabetes = pima_full$diabetic)
+
+#Plotting the PCA analysis, indicating diabetic status, and cluster number
+ggplot(cluster_data, aes(x=PC1, y=PC2, color = cluster, shape = diabetes)) + geom_point(size = 5)
+```
+
+The data was clustered at the point at which the within group sum of squares began to decrease at a nonsignificant amount, resulting in up to 5 different groups being potentially detected based off of the information present. K-means clustering was chosen because it would make it easiest to identify any outlying groups, as would be expected if there was an outside set of genes in the pool (indicating a differeing genetic makeup). There was no clearly defined cluster outside of the rest, which could potentiall be explained through generations of genetic assimiation into the group. This indicates that there is a high degree of genetic homology between the people in this data set. There is some spreading with cluster 5, so any future research into this question should begin with those individuals, partitcularly the one outlier at the far bottom left of the plot. 
+
+<br> 
+
+Is there a relationship between plasma glucose concentration at 2 hours in an oral glucose tolerance test and 2-hour serum insulin level in Pima woment?
+```{r}
+#Removing all entries where the vlaue for insulin was 0
+pima_insulin <- pima_full %>% filter(pima_full$insulin != 0)
+
+#Creating the scatterplot with linear model's line running though it 
+pima_insulin %>% ggplot(aes(x = glucose, y=insulin)) + geom_point() + geom_smooth(method = "lm", se=FALSE, col = "red")
+
+#Calculating the linear model
+fit <- lm(insulin ~ glucose, data = pima_insulin)
+
+#Printing out the r-squared value
+summary(fit)$r.squared
+```
+
+There is a definite positive relationship between the plasma glucose concentration and serum insulin level after the two hour test was performed on these Pima women. with an r-squared value of 0.338, it has been determined that 33.8% of the variance in insulin levels is due to the variance in plasma glucose levels. A scatter plot with an embeded linear model was chosen to answer this question. The scatterplot allows the reader to easily understand the overall trend of the relationship between these two variables while the linear model's line gives the reader a direct line of best fit that is easier to intrepret. 
+
