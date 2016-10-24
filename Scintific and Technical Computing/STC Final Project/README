@@ -1,0 +1,13 @@
+This project, the computational identification of the number and type of AT domains in a random PKS amino acid sequence, was completed by Neil Klenk, Kyoung Won Oe, and Lee Sugarek.
+
+Included in this repository should be all relevant project material including presentation, report, and code including the makefile. All relevant pictures are included in the report.
+
+To compile the program use "make" command. Different fasta files can be attempted by switching out the current "fasta.txt" file with another of the same name.
+
+Any fasta file of comparable length should work fine, but those significantly longer than the test case aren't guranteed.
+
+Different matrices may also be attempted by switching out the current "matrix.txt" for another of the same name and dimensions.
+The current matrix can be found at: http://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt
+
+
+Thanks for a great semester!!!

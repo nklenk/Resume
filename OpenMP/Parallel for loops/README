@@ -1,0 +1,18 @@
+In this assignment I explored the effects of the simple parallel directive and the #pragma omp for directive on loops in matrix multiplication.
+
+When N was 10 or 100 for NxN matrices, the fastest way to multiply them was without any parallelization of code.
+It was only once N = 1000 that the code utilizing the #pragma omp for directive was able to take a significant amount of time out of the calculations (7061ms to 15ms).
+
+For the simple directive:
+All of the cases for the simple directive were slower than the cases without any parallelization.
+Those with the least amount of threads tended to perform better.
+The exception is the case for which N=1000.
+thread count = 8 and 64 completed it in 8317ms and 88851ms respectively, with threadcount = 16 and 32 receiving a segmentation fault
+The slower times experienced here is due to the behavior of the code at the point where the parallelism is started.
+multiple threads are spawned, but they are all completing the whole for loop.
+
+For the #pragma omp for directive:
+Overall, the times here showed significant improvement over the code parallelized using only the simple directive.
+This is thanks to the introduced directive further splitting up the loop iterations into the number of threads.
+All of the times peaked at the thread count =  16.
+A thread count of 8 with N = 1000 showed the most improvement over the case with no parallelism.

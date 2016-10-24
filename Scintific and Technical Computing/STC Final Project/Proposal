@@ -1,0 +1,15 @@
+l Klenk
+Kyoung Won Oe
+Lee Sugarek
+
+Project Proposal: Identification of the number of AT domains in a polyketide synthase
+
+Polyketide synthases (PKSs) are massive (>MDa) enzyme assembly lines encoded within the bacterial chromosome. They are composed a limited set of tethered domains that act in a consecutive, modular, fashion to construct polyketide substrates as they progress through the synthase from the N to C terminal end. Each of the domains performs a specific action on the growing PKS at a very well defined region of the polyketide. Where and how each of these domains acts is totally dependent on its location within the synthase. This collinear relationship between PKS sequence and polyketide structure, and the ability to determine one from the other is at the foundation of orphan PKS Identification.
+
+The AT domain is one of the most crucial domains within these polyketide synthases. It is responsible for the catalyzation of the transfer of the extender unit to the ACP of the module which extends the chain. This extender unit can be either a malonyl-CoA or a Methylmalonyl-CoA. The AT domain is characterized by a very well defined motif (sequence of amino acids) within the overall polyketide synthase sequence. There are two distinct variances of the AT motif that allows us to differentiate between the two possible extender units. It is our intent to develop a method that will allow us to input a fasta file, and have the number of AT domains located within that synthase returned, as well as the type of extender unit that it utilized. 
+
+	Essentially what we will be doing is pattern comparisons between existing known motifs, and the fasta files that we will read in. Some potential problems that may arise throughout the course of this project includes false positive and false negative reads. Biological data is never perfect, and we will have to devise methods to minimize the number of domains that we have missed, as well as limit the number of domains that are flagged, but not actually present. One potential way that we could do this is through the utilization of a matrix that would assign a negative score to mismatched pairs, as well as a positive score to matched pairs. I could find no function in C or any of its libraries that could accomplish this, so we would have to write it from scratch, or find a way to implement it from a higher level code. 
+
+	If the current proposal is not of adequate complexity, we have discussed doing this method for all of the domains in the polyketide synthase, which would allow us to accurately predict the end structure of the resultant polyketide that was synthesized. 
+
+
