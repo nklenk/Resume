@@ -1,7 +1,3 @@
-Neil Klenk
-
-Homework 10
-
 To run please compile with the "make" command.
 The number of threads is set to 10 within the program.
 
