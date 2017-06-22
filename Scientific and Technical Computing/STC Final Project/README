@@ -8,6 +8,3 @@ Any fasta file of comparable length should work fine, but those significantly lo
 
 Different matrices may also be attempted by switching out the current "matrix.txt" for another of the same name and dimensions.
 The current matrix can be found at: http://www.ncbi.nlm.nih.gov/Class/FieldGuide/BLOSUM62.txt
-
-
-Thanks for a great semester!!!
