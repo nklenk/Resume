@@ -1,7 +1,7 @@
-<<<<<<< HEAD
-STC HW2
-Neil Klenk
-nlk322
+Code written with the purpose of exploring 3 different convergence methods (trapezoid, Simpson's, and midpoint). All of it was written in C. 
+Use the "make" command to compile the program
+
+My testing resuls are as follows:
 
 The Midpoint method and the trapezoid method both converged to the expected 0.125 value, while the Simpson's method converged to 0.0009766. Simpson's method was supposed to converge to .125 as well, but for the sake of analyzing the mechanics, the value it converged to will be overlooked.
 
@@ -12,8 +12,3 @@ The Simpson's method was able to nearly converge in fewer steps with the same sp
 However after N = 100001 the midpoint speed was the best, meaning if extremely high precision was needed then midpoint would be the best.
 
 The Trapezoid method was the slowest out of all the routines, and took the longest to converge. Therefore this method should be avoided.
-=======
-Initial code created on 9/8/2015
-Name: Neil Klenk
-email: nklenk@utexas.edu
->>>>>>> f3d22e97233b95c06f69f0cfcd591c27ac2a403b
