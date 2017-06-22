@@ -1,5 +1,5 @@
 # Resume
-### A showcase of past code that I have written sepparated into files as follows
+### A showcase of past code that I have written sepparated into folders as follows
 
 ## Bayesian Statistics
 ### A brief report that I wrote on Bayesian statistics, the fallacies of the P-value, and proposed a solution using Bayesian statistics
