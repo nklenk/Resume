@@ -1,3 +1,4 @@
 An example of the Monte Carlo method that I worte in C. 
 The Monte Carlo method is a probablilistc way to aproximate the solutions of equations. 
 
+Use the "make" command to compile the program.
