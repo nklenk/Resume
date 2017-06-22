@@ -1,4 +1,4 @@
-In this assignment I explored the effects of the simple parallel directive and the #pragma omp for directive on loops in matrix multiplication.
+In this project I explored the effects of the simple parallel directive and the #pragma omp for directive on loops in matrix multiplication.
 
 When N was 10 or 100 for NxN matrices, the fastest way to multiply them was without any parallelization of code.
 It was only once N = 1000 that the code utilizing the #pragma omp for directive was able to take a significant amount of time out of the calculations (7061ms to 15ms).
