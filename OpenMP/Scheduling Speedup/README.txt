@@ -1,3 +1,6 @@
+In this program, I explored the speedup seeing using different types of scheduling (static, dynamic, and guided). The results are below.
+Please compile with the "make" command.
+
 When using the static scheduling, the best speedup that we saw occured when n=7 while there were 10 threads avaliable. 
      The reason that the maximum speedup was not seen when n matched the number of avaliabe threads was because some of the avaliable threads are always beeing uses for background processes
 
