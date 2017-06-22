@@ -1,4 +1,3 @@
-Shold contain all necessary files for HW 9 and 10. 
-Makefile creates all executables.
+An example of the Monte Carlo method that I worte in C. 
+The Monte Carlo method is a probablilistc way to aproximate the solutions of equations. 
 
-Neil
