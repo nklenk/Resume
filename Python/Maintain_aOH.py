@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jan  3 13:04:26 2017
-
-@author: XZ6RZM
-"""
-
 import re
 import openpyxl
 import pandas as pd
 
 #initialize out_files
-JIL_out = open('C:\\Users\\XZ6RZM\\Documents\\Autosys\\Out\\JIL_out.txt', 'w')
-Backout_JIL_out = open('C:\\Users\\XZ6RZM\\Documents\\Autosys\\Out\\Backout_JIL_out.txt', 'w')
+JIL_out = open('C:\\Users\\neilklenk\\Documents\\Autosys\\Out\\JIL_out.txt', 'w')
+Backout_JIL_out = open('C:\\Users\\neilklenk\\Documents\\Autosys\\Out\\Backout_JIL_out.txt', 'w')
 
 #open the Template
-with open('C:\\Users\\XZ6RZM\\Documents\\Autosys\\aOH JIL Template 161214.txt', 'r') as Template_handle:
+with open('C:\\Users\\neilklenk\\Documents\\Autosys\\aOH JIL Template 161214.txt', 'r') as Template_handle:
     Template_contents = Template_handle.readlines()
     
 #Create a dictionary of the notification email addresses
@@ -39,7 +33,7 @@ exc_cal = []
 print("please input the name of the workbook without the extension.")
 workbook = input(">")
 
-df = pd.read_csv("C:\\Users\\XZ6RZM\\Documents\\Autosys\\" + workbook + ".csv", header=0)
+df = pd.read_csv("C:\\Users\\neilklenk\\Documents\\Autosys\\" + workbook + ".csv", header=0)
 initial_df = df
 
 #Function to determine the index of relevant columns
@@ -125,7 +119,7 @@ need_mon = need_mon[need_mon.job_type != 'FT']
 need_mon = need_mon[need_mon.job_type != 'FW']
 print('Done')
 
-need_mon.to_excel('C:\\Users\\XZ6RZM\\Documents\\Autosys\\need_mon.xlsx', sheet_name = 'Sheet 1', index = False)
+need_mon.to_excel('C:\\Users\\neilklenk\\Documents\\Autosys\\need_mon.xlsx', sheet_name = 'Sheet 1', index = False)
 
 #******************************************************************************
 #need_mon now contains all of the jobs tha need a moniter
@@ -146,13 +140,13 @@ for i in range(0,len(df.start_mins)):
         
 has_mon = df[df.contains_aOH_mon_box == True]
 
-has_mon.to_excel('C:\\Users\\XZ6RZM\\Documents\\Autosys\\has_mon.xlsx', sheet_name = 'Sheet 1', index = False)
+has_mon.to_excel('C:\\Users\\neilklenk\\Documents\\Autosys\\has_mon.xlsx', sheet_name = 'Sheet 1', index = False)
 #******************************************************************************
 #has_mon continas all of the jobs that already have a moniter on them
 #******************************************************************************
 
 #open Excel sheet containing JILs to be made
-Job_handle = openpyxl.load_workbook('C:\\Users\\XZ6RZM\\Documents\\Autosys\\need_mon.xlsx')
+Job_handle = openpyxl.load_workbook('C:\\Users\\neilklenk\\Documents\\Autosys\\need_mon.xlsx')
 Sheet = Job_handle.get_sheet_names()
 my_sheet = Job_handle.get_sheet_by_name(Sheet[0]) #need to make sheet name dependent on passed workbook
 
