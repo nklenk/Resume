@@ -15,3 +15,6 @@
 
 ## Bayesian Statistics Report
 ### A brief report that I wrote on Bayesian statistics, the fallacies of the P-value, and proposed a solution using Bayesian statistics
+
+## Cirocs
+### Some visualizations that I created using the Circos data visualizatioXn suite
