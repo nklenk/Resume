@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#cat data/dog.vs.human.all.txt | bin/bundlelinks > data/dog.vs.human.bundles.new.txt
+cat data/Rn6.links.txt | bin/bundlelinks > Rn6.bundled.links.txt

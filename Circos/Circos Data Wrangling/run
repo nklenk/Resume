@@ -1,0 +1,14 @@
+# This runfile takes the karyotype created by rn6_karyotype_gen.py, and creates link data
+
+# This is meant to be run in the circos-tools-0.22/tools folder after file "data"
+# has been created, and Rn6.karyotype.txt has been added to that
+
+
+# Creating random link data
+cat data/Rn6.karyotype.txt | randomlinks/bin/randomlinks > data/Rn6.links.txt
+
+# Binning link data for scatterplots etc
+cat data/Rn6.karyotype.txt | randomlinks/bin/randomlinks | binlinks/bin/binlinks > data/Rn6.binned.links.txt
+
+# Bundling link data for ribbon creation
+cat data/Rn6.karyotype.txt | randomlinks/bin/randomlinks | bundlelinks/bin/bundlelinks > data/Rn6.bundled.links.txt

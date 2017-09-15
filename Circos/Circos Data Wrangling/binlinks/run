@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat data/Rn6.links.txt | bin/binlinks > Rn6.binned.links.txt
