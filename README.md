@@ -14,7 +14,7 @@
 ### A few assignments that I did in my Scientific and Technical Computing course at UT Austin. Includes convergence methods, matrix multiplication, Monte Carlo simulations, as well as the report to the final project. All of this was run on the Stampede super computer owned by the Institute of Computational Engineering and Science (ICES).
 
 ## Circos
-$6 rat genome. Created using the Circos data visualization tool (Circos.ca)
+### Visualization of gene expression for the first three chromosomes of the Rn6 rat genome. Created using the Circos data visualization tool (Circos.ca)
 
 ## Bayesian Statistics Report
 ### A brief report that I wrote on Bayesian statistics, the fallacies of the P-value, and proposed a solution using Bayesian statistics
